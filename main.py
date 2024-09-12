@@ -54,6 +54,7 @@ def main():
             translation = groq_translate(text, 'en', option) # Perform Translation
         st.subheader('Translated Text to ' + option) 
         st.write(translation.text)
+        text_to_speech_stream(translation.text)
 
 def speech_to_text(audio_bytes_io): 
     transcription = groq_client.audio.transcriptions.create(
@@ -63,6 +64,32 @@ def speech_to_text(audio_bytes_io):
         language="en",
         )
     return transcription.text
+
+def text_to_speech_stream(text: str):
+    response = elevenlabs_client.text_to_speech.convert(
+        voice_id="21m00Tcm4TlvDq8ikWAM", 
+        output_format="mp3_22050_32",
+        text=text,
+        model_id="eleven_multilingual_v2", # Eleven model
+        voice_settings=VoiceSettings(
+            stability=1.0,
+            similarity_boost=1.0,
+            style=0.0,
+            use_speaker_boost=True,
+        ),
+    )
+
+    # Create a BytesIO object to hold the audio data in memory
+    audio_stream = BytesIO()
+
+    # Write each chunk of audio data to the stream
+    for chunk in response:
+        if chunk:
+            audio_stream.write(chunk)
+
+     # Convert the BytesIO stream to bytes
+    audio_data = audio_stream.getvalue()
+    play(audio_data)
 
 if __name__ == "__main__":
     main()
