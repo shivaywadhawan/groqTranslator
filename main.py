@@ -5,6 +5,8 @@ from elevenlabs import VoiceSettings,play
 from elevenlabs.client import ElevenLabs
 from io import BytesIO
 from decouple import config 
+from groq_translation import groq_translate 
+
 
 groq_api_key = config("GROQ_API_KEY")
 eleven_api_key = config("ELEVEN_API_KEY")
@@ -45,7 +47,13 @@ def main():
         
         # Save audio to file
         audio_file_like = BytesIO(audio_bytes)
+        #Perform STT
         text = speech_to_text(audio_file_like)
+        st.divider() 
+        with st.spinner('Translating...'): 
+            translation = groq_translate(text, 'en', option) # Perform Translation
+        st.subheader('Translated Text to ' + option) 
+        st.write(translation.text)
 
 def speech_to_text(audio_bytes_io): 
     transcription = groq_client.audio.transcriptions.create(
